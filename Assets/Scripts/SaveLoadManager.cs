@@ -31,9 +31,10 @@ public class SaveLoadManager : MonoBehaviour {
         }
     }
 
-    public void SaveRobotData(List<GeneData> geneDataList) {
+    public void SaveRobotData(string fileName, List<GeneData> geneDataList) {
+        fileName = FormatFileName(fileName);
         string jsonData = JsonUtility.ToJson(new GeneDataList(geneDataList));
-        string filePath = System.IO.Path.Combine(_saveDirectory, "robots_save_data.json");
+        string filePath = System.IO.Path.Combine(_saveDirectory, fileName);
 #if UNITY_EDITOR_WIN
         filePath = filePath.Replace("\\", "/");
 #endif
@@ -49,8 +50,9 @@ public class SaveLoadManager : MonoBehaviour {
         }
     }
 
-    public GeneDataList LoadRobotData() {
-        string filePath = System.IO.Path.Combine(_saveDirectory, "robots_save_data.json");
+    public GeneDataList LoadRobotData(string fileName) {
+        fileName = FormatFileName(fileName);
+        string filePath = System.IO.Path.Combine(_saveDirectory, fileName);
 #if UNITY_EDITOR_WIN
         filePath = filePath.Replace("\\", "/");
 #endif
@@ -62,6 +64,21 @@ public class SaveLoadManager : MonoBehaviour {
         } else {
             Debug.Log("Save data file not found in " + filePath);
             return null;
+        }
+    }
+
+    /// <summary>
+    /// add ".json" extension if not present
+    /// </summary>
+    private string FormatFileName(string fileName)
+    {
+        if (fileName.EndsWith(".json"))
+        {
+            return fileName;
+        }
+        else
+        {
+            return fileName + ".json";
         }
     }
 }

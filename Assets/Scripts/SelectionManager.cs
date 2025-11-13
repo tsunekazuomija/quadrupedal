@@ -4,6 +4,7 @@ using UnityEngine.UI;
 
 public class SelectionManager : MonoBehaviour
 {
+    [SerializeField] private string _saveFileName = "robots_save_data.json";
     public GameObject robotPrefab;
     public Slider populationSizeSlider;
     public Slider survivalRateSlider;
@@ -326,13 +327,13 @@ public class SelectionManager : MonoBehaviour
             geneData.name = int.Parse(robot.name);
             geneDataList.Add(geneData);
         }
-        SaveLoadManager.Instance.SaveRobotData(geneDataList);
+        SaveLoadManager.Instance.SaveRobotData(_saveFileName, geneDataList);
     }
 
     // Loadロジックの例
     public void Load()
     {
-        GeneDataList geneDataList = SaveLoadManager.Instance.LoadRobotData();
+        GeneDataList geneDataList = SaveLoadManager.Instance.LoadRobotData(_saveFileName);
         if (geneDataList != null)
         {
             robots = new List<GameObject>();
