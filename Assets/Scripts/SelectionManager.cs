@@ -2,7 +2,8 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
-public class SelectionManager : MonoBehaviour {
+public class SelectionManager : MonoBehaviour
+{
     public GameObject robotPrefab;
     public Slider populationSizeSlider;
     public Slider survivalRateSlider;
@@ -14,11 +15,14 @@ public class SelectionManager : MonoBehaviour {
     private int robotVersion = 0;
     private int generation = 0;
 
-    void Start() {
+    void Start()
+    {
         Load();
-        if (robots == null) {
+        if (robots == null)
+        {
             robots = new List<GameObject>();
-            for (int i = 0; i < populationSize; i++) {
+            for (int i = 0; i < populationSize; i++)
+            {
                 GameObject robot = Instantiate(robotPrefab, new Vector3(0, 3, 0), Quaternion.Euler(0, 90, 90));
                 robots.Add(robot);
                 robot.name = "" + robotVersion;
@@ -33,9 +37,11 @@ public class SelectionManager : MonoBehaviour {
         survivalRate = survivalRateSlider.value;
     }
 
-    void FixedUpdate() {
+    void FixedUpdate()
+    {
         generationTimer += Time.fixedDeltaTime;
-        if (generationTimer >= generationTime) {
+        if (generationTimer >= generationTime)
+        {
             // ロボットのサイズを遺伝子に適用
             ApplyGene();
 
@@ -49,7 +55,8 @@ public class SelectionManager : MonoBehaviour {
         }
     }
 
-    void SelectAndReproduce() {
+    void SelectAndReproduce()
+    {
         robots.Sort((a, b) => (b.transform.position).sqrMagnitude.CompareTo((a.transform.position).sqrMagnitude));
 
         // Display the best gene and distance
@@ -59,7 +66,8 @@ public class SelectionManager : MonoBehaviour {
         int survivalCount = (int)(robots.Count * survivalRate);
         int replacementCount = robots.Count - survivalCount;
 
-        for (int i = 0; i < replacementCount; i++) {
+        for (int i = 0; i < replacementCount; i++)
+        {
             // Crossover between two selected parents from the surviving robots
             var parent1 = robots[Random.Range(0, survivalCount)].GetComponent<JointController>().gene;
             var parent2 = robots[Random.Range(0, survivalCount)].GetComponent<JointController>().gene;
@@ -85,40 +93,48 @@ public class SelectionManager : MonoBehaviour {
     }
 
     // Display the best gene and distance of the current generation
-    void DisplayBestGeneAndDistance() {
+    void DisplayBestGeneAndDistance()
+    {
         var bestGene = robots[0].GetComponent<JointController>().gene;
         string geneString = "";
-        foreach (var angle in bestGene.angles) {
+        foreach (var angle in bestGene.angles)
+        {
             geneString += angle.ToString() + ", ";
         }
-        foreach (var legSize in bestGene.legSizes) {
+        foreach (var legSize in bestGene.legSizes)
+        {
             geneString += legSize.ToString() + ", ";
         }
-        foreach (var bodySize in bestGene.bodySizes) {
+        foreach (var bodySize in bestGene.bodySizes)
+        {
             geneString += bodySize.ToString() + ", ";
         }
         Debug.Log("Generation: " + generation + ",Best distance: " + (robots[0].transform.position).sqrMagnitude);
     }
 
     // Crossover function to mix genes of two parents
-    Gene Crossover(Gene parent1, Gene parent2) {
+    Gene Crossover(Gene parent1, Gene parent2)
+    {
         Gene child = new Gene(parent1.angles.Count, parent1.legSizes.Count);
-        
+
         // Decide the crossover point for angles
         int crossoverPointAngles = Random.Range(0, parent1.angles.Count);
-        for (int i = 0; i < parent1.angles.Count; i++) {
+        for (int i = 0; i < parent1.angles.Count; i++)
+        {
             child.angles[i] = i < crossoverPointAngles ? parent1.angles[i] : parent2.angles[i];
         }
 
         // Decide the crossover point for legSizes
         int crossoverPointLegSizes = Random.Range(0, parent1.legSizes.Count);
-        for (int i = 0; i < parent1.legSizes.Count; i++) {
+        for (int i = 0; i < parent1.legSizes.Count; i++)
+        {
             child.legSizes[i] = i < crossoverPointLegSizes ? parent1.legSizes[i] : parent2.legSizes[i];
         }
 
         // Decide the crossover point for bodySizes
         int crossoverPointBodySizes = Random.Range(0, parent1.bodySizes.Count);
-        for (int i = 0; i < parent1.bodySizes.Count; i++) {
+        for (int i = 0; i < parent1.bodySizes.Count; i++)
+        {
             child.bodySizes[i] = i < crossoverPointBodySizes ? parent1.bodySizes[i] : parent2.bodySizes[i];
         }
 
@@ -134,23 +150,29 @@ public class SelectionManager : MonoBehaviour {
 
 
     // Mutate function to introduce random changes
-    void Mutate(Gene gene) {
+    void Mutate(Gene gene)
+    {
         // Mutation logic for angles
-        for (int i = 0; i < gene.angles.Count; i++) {
-            if (Random.Range(0.0f, 1.0f) < 0.1f) {
+        for (int i = 0; i < gene.angles.Count; i++)
+        {
+            if (Random.Range(0.0f, 1.0f) < 0.1f)
+            {
                 gene.angles[i] = Random.Range(-60.0f, 60.0f);
             }
         }
-        
+
         // Mutation logic for legSizes
-        for (int i = 0; i < gene.legSizes.Count; i++) {
-            if (Random.Range(0.0f, 1.0f) < 0.1f) {
+        for (int i = 0; i < gene.legSizes.Count; i++)
+        {
+            if (Random.Range(0.0f, 1.0f) < 0.1f)
+            {
                 gene.legSizes[i] = Random.Range(0.1f, 0.5f);
             }
         }
-        
+
         // Ensure the volume of the body remains constant after mutation
-        if (Random.Range(0.0f, 1.0f) < 0.1f) {
+        if (Random.Range(0.0f, 1.0f) < 0.1f)
+        {
             float volume = gene.bodySizes[0] * gene.bodySizes[1] * gene.bodySizes[2];
             gene.bodySizes[0] = Random.Range(1.5f, 3.0f);
             gene.bodySizes[1] = Random.Range(1.5f, 3.0f);
@@ -159,15 +181,18 @@ public class SelectionManager : MonoBehaviour {
     }
 
     // Change the size of the robot
-    void ChangeRobotSize() {
+    void ChangeRobotSize()
+    {
         // 足のサイズをそれぞれ遺伝子から設定
-        foreach (var robot in robots) {
-            for (int i = 0; i < robot.GetComponent<JointController>().legParts.Count; i = i + 2) {
+        foreach (var robot in robots)
+        {
+            for (int i = 0; i < robot.GetComponent<JointController>().legParts.Count; i = i + 2)
+            {
                 var legPartR = robot.GetComponent<JointController>().legParts[i];
-                var legPartL = robot.GetComponent<JointController>().legParts[i+1];
-                var legSizeX = robot.GetComponent<JointController>().gene.legSizes[3*i];
-                var legSizeY = robot.GetComponent<JointController>().gene.legSizes[3*i+1];
-                var legSizeZ = robot.GetComponent<JointController>().gene.legSizes[3*i+2];
+                var legPartL = robot.GetComponent<JointController>().legParts[i + 1];
+                var legSizeX = robot.GetComponent<JointController>().gene.legSizes[3 * i];
+                var legSizeY = robot.GetComponent<JointController>().gene.legSizes[3 * i + 1];
+                var legSizeZ = robot.GetComponent<JointController>().gene.legSizes[3 * i + 2];
 
                 // legSizeを適用
                 legPartR.transform.localScale = new Vector3(
@@ -180,12 +205,13 @@ public class SelectionManager : MonoBehaviour {
                     legSizeX,
                     legSizeY,
                     legSizeZ
-                );        
+                );
             }
         }
 
         // 体のサイズをそれぞれ遺伝子から設定
-        foreach (var robot in robots) {
+        foreach (var robot in robots)
+        {
             var body = robot.GetComponent<JointController>().body;
             var bodySizeX = robot.GetComponent<JointController>().gene.bodySizes[0];
             var bodySizeY = robot.GetComponent<JointController>().gene.bodySizes[1];
@@ -200,28 +226,33 @@ public class SelectionManager : MonoBehaviour {
         }
     }
 
-    void ChangePopulationSize() {
+    void ChangePopulationSize()
+    {
         // populationSize が0以下の場合は何もしない
-        if (populationSize <= 0) {
+        if (populationSize <= 0)
+        {
             return;
         }
 
         int currentPopulation = robots.Count;
 
         // ロボットの数が目標より少ない場合、追加する
-        while (currentPopulation < populationSize) {
+        while (currentPopulation < populationSize)
+        {
             AddRobot();
             currentPopulation++;
         }
 
         // ロボットの数が目標より多い場合、削除する
-        while (currentPopulation > populationSize) {
+        while (currentPopulation > populationSize)
+        {
             RemoveRobot(currentPopulation - 1);
             currentPopulation--;
         }
     }
 
-    void AddRobot() {
+    void AddRobot()
+    {
         GameObject robot = Instantiate(robotPrefab, new Vector3(0, 0, 0), Quaternion.Euler(0, 90, 90));
         robots.Add(robot);
         robot.name = "" + robotVersion;
@@ -229,8 +260,10 @@ public class SelectionManager : MonoBehaviour {
         robotVersion++;
     }
 
-    void RemoveRobot(int index) {
-        if (index >= 0 && index < robots.Count) {
+    void RemoveRobot(int index)
+    {
+        if (index >= 0 && index < robots.Count)
+        {
             GameObject robotToRemove = robots[index];
             robots.RemoveAt(index);
             Destroy(robotToRemove);
@@ -238,44 +271,53 @@ public class SelectionManager : MonoBehaviour {
     }
 
 
-    void ResetRobots() {
+    void ResetRobots()
+    {
         // シーン上のロボットをすべて削除
-        foreach (var robot in robots) {
+        foreach (var robot in robots)
+        {
             Destroy(robot);
         }
     }
 
     // ロボットのサイズを遺伝子に適用する
-    public void ApplyGene() {
-        for (int i = 0; i < robots.Count; i++) {
+    public void ApplyGene()
+    {
+        for (int i = 0; i < robots.Count; i++)
+        {
             // 胴体のサイズを遺伝子に適用
             robots[i].GetComponent<JointController>().gene.bodySizes[0] = robots[i].transform.localScale.x;
             robots[i].GetComponent<JointController>().gene.bodySizes[1] = robots[i].transform.localScale.y;
             robots[i].GetComponent<JointController>().gene.bodySizes[2] = robots[i].transform.localScale.z;
 
             // 足のサイズをそれぞれ遺伝子に適用
-            for (int j = 0; j < robots[i].GetComponent<JointController>().legParts.Count; j = j + 2) {
+            for (int j = 0; j < robots[i].GetComponent<JointController>().legParts.Count; j = j + 2)
+            {
                 var legPartR = robots[i].GetComponent<JointController>().legParts[j];
-                var legPartL = robots[i].GetComponent<JointController>().legParts[j+1];
-                robots[i].GetComponent<JointController>().gene.legSizes[3*j] = legPartR.transform.localScale.x;
-                robots[i].GetComponent<JointController>().gene.legSizes[3*j+1] = legPartR.transform.localScale.y;
-                robots[i].GetComponent<JointController>().gene.legSizes[3*j+2] = legPartR.transform.localScale.z;
+                var legPartL = robots[i].GetComponent<JointController>().legParts[j + 1];
+                robots[i].GetComponent<JointController>().gene.legSizes[3 * j] = legPartR.transform.localScale.x;
+                robots[i].GetComponent<JointController>().gene.legSizes[3 * j + 1] = legPartR.transform.localScale.y;
+                robots[i].GetComponent<JointController>().gene.legSizes[3 * j + 2] = legPartR.transform.localScale.z;
             }
         }
     }
 
-    public void SetPopulationSize() {
+    public void SetPopulationSize()
+    {
         populationSize = (int)populationSizeSlider.value;
     }
 
-    public void SetSurvivalRate() {
+    public void SetSurvivalRate()
+    {
         survivalRate = survivalRateSlider.value;
     }
 
     // Saveロジックの例
-    public void Save() {
+    public void Save()
+    {
         List<GeneData> geneDataList = new List<GeneData>();
-        foreach (var robot in robots) {
+        foreach (var robot in robots)
+        {
             Gene gene = robot.GetComponent<JointController>().gene;
             GeneData geneData = new GeneData(gene);
             geneData.angles = gene.angles;
@@ -288,15 +330,19 @@ public class SelectionManager : MonoBehaviour {
     }
 
     // Loadロジックの例
-    public void Load() {
+    public void Load()
+    {
         GeneDataList geneDataList = SaveLoadManager.Instance.LoadRobotData();
-        if (geneDataList != null) {
+        if (geneDataList != null)
+        {
             robots = new List<GameObject>();
-            foreach (var geneData in geneDataList.geneDatas) {
+            foreach (var geneData in geneDataList.geneDatas)
+            {
                 GameObject robot = Instantiate(robotPrefab, new Vector3(0, 3, 0), Quaternion.Euler(0, 90, 90));
                 //  public Gene(int numAngles, int numLegSizes)
                 robot.GetComponent<JointController>().gene = new Gene(geneData.angles.Count, geneData.legSizes.Count);
-                for (int i = 0; i < geneData.angles.Count; i++) {
+                for (int i = 0; i < geneData.angles.Count; i++)
+                {
                     robot.GetComponent<JointController>().gene.angles[i] = geneData.angles[i];
                 }
                 robot.GetComponent<JointController>().gene.legSizes = geneData.legSizes;

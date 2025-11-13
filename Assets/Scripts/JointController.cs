@@ -3,7 +3,8 @@ using System.Collections.Generic;
 using UnityEngine;
 
 
-public class JointController : MonoBehaviour {
+public class JointController : MonoBehaviour
+{
     public List<HingeJoint> joints;
     public List<GameObject> legParts;
     public GameObject body;
@@ -14,16 +15,20 @@ public class JointController : MonoBehaviour {
     private int currentGeneIndex = 0;
     private float timer = 0.0f;
 
-    private void Awake() {
-        if (gene.angles.Count != joints.Count*jointPhase) {
-            gene = new Gene(joints.Count*jointPhase, legParts.Count * 3);
+    private void Awake()
+    {
+        if (gene.angles.Count != joints.Count * jointPhase)
+        {
+            gene = new Gene(joints.Count * jointPhase, legParts.Count * 3);
         }
         ApplyGene();
     }
 
-    private void FixedUpdate() {
+    private void FixedUpdate()
+    {
         timer += Time.deltaTime;
-        if (timer >= timePerGene) {
+        if (timer >= timePerGene)
+        {
             timer -= timePerGene;
             // currentGeneIndexは今何段階目の遺伝子かを表す
             currentGeneIndex = (currentGeneIndex + 1) % jointPhase;
@@ -31,8 +36,10 @@ public class JointController : MonoBehaviour {
         }
     }
 
-    public void ApplyGene() {
-        for (int i = 0; i < joints.Count; i++) {
+    public void ApplyGene()
+    {
+        for (int i = 0; i < joints.Count; i++)
+        {
             var joint = joints[i];
             var angle = gene.angles[i + currentGeneIndex * joints.Count];
 
