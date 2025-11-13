@@ -9,7 +9,7 @@ public class SaveLoadManager : MonoBehaviour {
     public static SaveLoadManager Instance {
         get {
             if (instance == null) {
-                instance = FindObjectOfType<SaveLoadManager>();
+                instance = FindFirstObjectByType<SaveLoadManager>();
                 if (instance == null) {
                     GameObject obj = new GameObject("SaveLoadManager");
                     instance = obj.AddComponent<SaveLoadManager>();
