@@ -7,11 +7,9 @@ public class SelectionManagerIEC : MonoBehaviour
 {
     [SerializeField] private string _saveFileName = "robots_save_data.json";
     public GameObject robotPrefab;
-    public Slider survivalRateSlider;
-    public int populationSize = 25;
+        public int populationSize = 25;
     public float div = 5;
-    public float generationTime = 60.0f;
-    public float survivalRate = 0.3f; // 新しい変数: 生存率（上位何%を保持するか）
+    [SerializeField, Range(0f, 1f)] private float survivalRate = 0.3f; // 新しい変数: 生存率（上位何%を保持するか）
     private List<GameObject> robots;
     private List<Camera> cameras;
     public Toggle togglePrefab;
@@ -54,8 +52,6 @@ public class SelectionManagerIEC : MonoBehaviour
         button.onClick.AddListener(SelectButtonClicked);
 
         ApplyGene();
-
-        survivalRate = survivalRateSlider.value;
     }
 
     void FixedUpdate()
@@ -387,8 +383,6 @@ public class SelectionManagerIEC : MonoBehaviour
             }
         }
     }
-
-    public void SetSurvivalRate() { survivalRate = survivalRateSlider.value; }
 
     // Saveロジックの例
     public void Save()
