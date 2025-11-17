@@ -7,7 +7,7 @@ public class SelectionManagerIEC : MonoBehaviour
 {
     [SerializeField] private string _saveFileName = "robots_save_data.json";
     public GameObject robotPrefab;
-        public int populationSize = 25;
+    public int populationSize = 25;
     public float div = 5;
     [SerializeField, Range(0f, 1f)] private float survivalRate = 0.3f; // 新しい変数: 生存率（上位何%を保持するか）
     private List<GameObject> robots;
@@ -20,12 +20,17 @@ public class SelectionManagerIEC : MonoBehaviour
     private int generation = 0;
     public Canvas canvas;
     private List<Toggle> toggles;
+    public RawImage rawImagePrefab;
+    private List<RenderTexture> renderTextures;
+    private List<RawImage> rawImages;
 
     void Start()
     {
         robots = new List<GameObject>();
         cameras = new List<Camera>();
         toggles = new List<Toggle>();
+        renderTextures = new List<RenderTexture>();
+        rawImages = new List<RawImage>();
 
         for (int i = 0; i < populationSize; i++)
         {
@@ -40,8 +45,19 @@ public class SelectionManagerIEC : MonoBehaviour
             GameObject cameraObject = new GameObject("RobotCamera");
             Camera camera = cameraObject.AddComponent<Camera>();
             cameras.Add(camera);
-            camera.rect = new Rect(
-                1.0f / div * (int)(i / div) * 0.8f, 1.0f / div * (i % div), 1.0f / div * 0.8f, 1.0f / div);
+            // camera.rect = new Rect(
+            //     1.0f / div * (int)(i / div) * 0.8f, 1.0f / div * (i % div), 1.0f / div * 0.8f, 1.0f / div);
+
+            // create RenderTexture and assign to camera
+            RenderTexture rt = new RenderTexture(256, 256, 16, RenderTextureFormat.Default);
+            renderTextures.Add(rt);
+            camera.targetTexture = rt;
+
+            // instantiate RawImage and assign RenderTexture
+            RawImage rawImage = Instantiate(rawImagePrefab, canvas.transform);
+            rawImage.texture = rt;
+            rawImages.Add(rawImage);
+
             cameraObject.transform.localPosition = new Vector3(0, 2, -5);
             cameraObject.transform.localRotation = Quaternion.Euler(10, 0, 0);
         }
@@ -50,6 +66,8 @@ public class SelectionManagerIEC : MonoBehaviour
         Button button = Instantiate(buttonPrefab, canvas.transform);
         button.transform.position = new Vector3(Screen.width * 0.9f, Screen.height * 0.5f, 0);
         button.onClick.AddListener(SelectButtonClicked);
+        var buttonText = button.GetComponentInChildren<TextMeshProUGUI>();
+        buttonText.text = "Select";
 
         ApplyGene();
     }
@@ -81,15 +99,37 @@ public class SelectionManagerIEC : MonoBehaviour
         {
             robots[i].transform.position = new Vector3(50 * (i / div), 3, 50 * (i % div));
             Toggle toggle = Instantiate(togglePrefab, canvas.transform);
+            toggle.isOn = false; // set off by default
             Camera camera;
             camera = cameras[i];
             string name = robots[i].name;
             toggle.onValueChanged.AddListener(isSelected => OnToggleChanged(name, isSelected));
             TextMeshProUGUI label = toggle.GetComponentInChildren<TextMeshProUGUI>();
             label.text = "Robot " + robots[i].name;
-            toggle.GetComponent<RectTransform>().anchoredPosition = new Vector2(
-                (camera.rect.x) * Screen.width - 0.5f * Screen.width * 0.8f,
-                (camera.rect.y - 0.5f + 0.5f / div) * Screen.height);
+
+            // calculate RawImage position
+            float rectX = 1.0f / div * (int)(i / div) * 0.8f;
+            float rectY = 1.0f / div * (i % div);
+            float rectW = 1.0f / div * 0.8f;
+            float rectH = 1.0f / div;
+
+            // apply position and size to RawImage
+            if (i < rawImages.Count && rawImages[i] != null)
+            {
+                RectTransform rtRect = rawImages[i].GetComponent<RectTransform>();
+                rtRect.anchorMin = new Vector2(rectX, rectY);
+                rtRect.anchorMax = new Vector2(rectX + rectW, rectY + rectH);
+                rtRect.offsetMin = Vector2.zero;
+                rtRect.offsetMax = Vector2.zero;
+            }
+
+            // set toggle position
+            RectTransform toggleRect = toggle.GetComponent<RectTransform>();
+            toggleRect.anchorMin = new Vector2(rectX, rectY);
+            toggleRect.anchorMax = new Vector2(rectX, rectY);
+            toggleRect.pivot = new Vector2(0, 0); // 左下を基点に
+            toggleRect.anchoredPosition = new Vector2(5, 5); // 5pxのパディング
+
             toggles.Add(toggle);
         }
 
@@ -130,7 +170,7 @@ public class SelectionManagerIEC : MonoBehaviour
         {
             CustomAttributes attributesA = a.GetComponent<CustomAttributes>();
             CustomAttributes attributesB = b.GetComponent<CustomAttributes>();
-            return attributesA.isSelected.CompareTo(attributesB.isSelected);
+            return attributesB.isSelected.CompareTo(attributesA.isSelected);
         });
 
 
@@ -332,6 +372,23 @@ public class SelectionManagerIEC : MonoBehaviour
         robot.name = "" + robotVersion;
         robot.GetComponent<DisplayName>().SetName();
         robotVersion++;
+
+        // create camera
+        GameObject cameraObject = new GameObject("RobotCamera");
+        Camera camera = cameraObject.AddComponent<Camera>();
+        cameras.Add(camera);
+        cameraObject.transform.localPosition = new Vector3(0, 2, -5);
+        cameraObject.transform.localRotation = Quaternion.Euler(10, 0, 0);
+
+        // create RenderTexture
+        RenderTexture rt = new RenderTexture(256, 256, 16, RenderTextureFormat.Default);
+        renderTextures.Add(rt);
+        camera.targetTexture = rt;
+
+        // create RawImage
+        RawImage rawImage = Instantiate(rawImagePrefab, canvas.transform);
+        rawImage.texture = rt;
+        rawImages.Add(rawImage);
     }
 
     void RemoveRobot(int index)
@@ -341,6 +398,26 @@ public class SelectionManagerIEC : MonoBehaviour
             GameObject robotToRemove = robots[index];
             robots.RemoveAt(index);
             Destroy(robotToRemove);
+
+            // Remove associated camera, RenderTexture, and RawImage
+            if (index < cameras.Count && cameras[index] != null)
+            {
+                Destroy(cameras[index].gameObject);
+            }
+            cameras.RemoveAt(index);
+
+            if (index < renderTextures.Count && renderTextures[index] != null)
+            {
+                renderTextures[index].Release();
+                Destroy(renderTextures[index]);
+            }
+            renderTextures.RemoveAt(index);
+
+            if (index < rawImages.Count && rawImages[index] != null)
+            {
+                Destroy(rawImages[index].gameObject);
+            }
+            rawImages.RemoveAt(index);
         }
     }
 
@@ -351,6 +428,29 @@ public class SelectionManagerIEC : MonoBehaviour
         {
             Destroy(robot);
         }
+        robots.Clear();
+
+        foreach (var camera in cameras)
+        {
+            if (camera) Destroy(camera.gameObject);
+        }
+        cameras.Clear();
+
+        foreach (var rt in renderTextures)
+        {
+            if (rt)
+            {
+                rt.Release();
+                Destroy(rt);
+            }
+        }
+        renderTextures.Clear();
+
+        foreach (var rawImage in rawImages)
+        {
+            if (rawImage) Destroy(rawImage.gameObject);
+        }
+        rawImages.Clear();
     }
 
     // ロボットのサイズを遺伝子に適用する
@@ -408,6 +508,12 @@ public class SelectionManagerIEC : MonoBehaviour
         if (geneDataList != null)
         {
             robots = new List<GameObject>();
+            cameras = new List<Camera>();
+            renderTextures = new List<RenderTexture>();
+            rawImages = new List<RawImage>();
+
+            int maxLoadedVersion = 0;
+
             foreach (var geneData in geneDataList.geneDatas)
             {
                 GameObject robot = Instantiate(robotPrefab, new Vector3(0, 3, 0),
@@ -424,11 +530,31 @@ public class SelectionManagerIEC : MonoBehaviour
                 robot.GetComponent<JointController>().gene.bodySizes =
                   geneData.bodySizes;
                 robot.name = geneData.name.ToString();
-                // robotVersionとgeneData.nameの大きい方をrobotVersionにする
-                robotVersion = Mathf.Max(robotVersion, geneData.name);
+
+                if (geneData.name > maxLoadedVersion)
+                {
+                    maxLoadedVersion = geneData.name;
+                }
+
                 robots.Add(robot);
                 robot.GetComponent<DisplayName>().SetName();
+
+                GameObject cameraObject = new GameObject("RobotCamera");
+                Camera camera = cameraObject.AddComponent<Camera>();
+                cameras.Add(camera);
+                cameraObject.transform.localPosition = new Vector3(0, 2, -5);
+                cameraObject.transform.localRotation = Quaternion.Euler(10, 0, 0);
+
+                RenderTexture rt = new RenderTexture(256, 256, 16, RenderTextureFormat.Default);
+                renderTextures.Add(rt);
+                camera.targetTexture = rt;
+
+                RawImage rawImage = Instantiate(rawImagePrefab, canvas.transform);
+                rawImage.texture = rt;
+                rawImages.Add(rawImage);
             }
+
+            robotVersion = Mathf.Max(robotVersion, maxLoadedVersion + 1);
 
             ChangeRobotSize();
         }
