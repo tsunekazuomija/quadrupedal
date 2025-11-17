@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
+using TMPro;
 
 public class SelectionManagerIEC : MonoBehaviour
 {
@@ -88,7 +89,7 @@ public class SelectionManagerIEC : MonoBehaviour
             camera = cameras[i];
             string name = robots[i].name;
             toggle.onValueChanged.AddListener(isSelected => OnToggleChanged(name, isSelected));
-            Text label = toggle.GetComponentInChildren<Text>();
+            TextMeshProUGUI label = toggle.GetComponentInChildren<TextMeshProUGUI>();
             label.text = "Robot " + robots[i].name;
             toggle.GetComponent<RectTransform>().anchoredPosition = new Vector2(
                 (camera.rect.x) * Screen.width - 0.5f * Screen.width * 0.8f,
